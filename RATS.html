@@ -1,0 +1,646 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>Real-Time Automated Trading System (Karl N. Redman)</title>
+<meta name="keywords" content="UNIX,Linux,C,C++,Socket,automated,options,trading,stock,programmer,developer,options trading,automated options,application,real time,multi threaded">
+<meta name="description" content="This is a draft specification for an automated ptions trading system similar to the systems that are used in high-end, everyday, options trading by big companies. The end product would use multi threading, sockets, and interprocess communications (IPC). -Karl N. Redman (sleepingstill.com)">
+</head>
+<BODY>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"><a name="TitlePage"></a>Real-Time Automated Trading System</p>
+</font><FONT SIZE=4>
+<P ALIGN="CENTER">[Specification]</p>
+</font></u></b> 
+<P ALIGN="CENTER">Written by: <a href="/resume/index.php">Karl N. Redman</a></p>
+<P ALIGN="CENTER">kredman@sleepingstill.com</p>
+<P ALIGN="CENTER"> <a href="http://www.sleepingstill.com">www.sleepingstill.com</a></p>
+<P ALIGN="CENTER">&nbsp;</p>
+<B><P ALIGN="CENTER">(First Draft)</p>
+</b><P ALIGN="CENTER">1-14-2003</p>
+<P ALIGN="CENTER"></p>
+<P>&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"><a name="Introduction"></a>Introduction </p>
+</font></u></b>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">The Real-Time Automated Trading System consists of several <I>software and hardware components </i>which facilitate one of many <I>strategies</i> for the automatic trading of stocks and stock options. The Real-Time Automated Trading System will receive and process data sent from a proprietary <I>Financial Market Data Provider</i>, store appropriate data that will be used for the strategic trading of (primarily) options, and communicate with various Automatic Brokerage Entities for the purpose of executing orders that are deemed strategically viable by the Strategy Management process from within the Real-Time Automated Trading System.  </p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">The final version of the Real-Time Automated Trading System will allow <I>traders</i> to experiment with and monitor their own <I>strategies</i> (i.e. strategies less conventional than those deemed to be consistent by the operators of the system) through a <I>Strategy Modeling Language</i> interface. The Strategy Modeling Language interface will rely heavily upon financial industry and generic modeling language standards. It is a primary goal of the Real-Time Automated Trading System developers that the Strategy Modeling Language become standardized within the financial software industry and that it will go through a series of revisions before it's final version.</p>
+
+<P ALIGN="JUSTIFY">It is believed that the Real-Time Automated Trading System will have an advantage over other automatic trading systems as a result of its simplistic modular design, unique data lookup and data cross referencing programming routines, as well as it's use of standardized and optimized software interfaces. The overall software design of the system will be <I>object oriented</i> with an emphasis upon taking advantage of specific <I>runtime platform</i> (operating system) features. The object orientation of the application design for the system will aid both in quickening the pace of initial development as well as making code maintenance easier for developers in the future.</p>
+<P ALIGN="CENTER"></p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"><a name="TableOfContents"></a>Table of Contents</p>
+</font></u></b>
+<P ALIGN="CENTER"></p>
+<P ALIGN="CENTER"><a href="#TitlePage">Title Page ...1</a></p>
+<P ALIGN="CENTER"><a href="#Introduction">Introduction ...2</a></p>
+<P ALIGN="CENTER">Table of Contents / Figures Index ...3</p>
+<P ALIGN="CENTER"><a href="#TechnicalOverview">Technical Overview ...4</a></p>
+<P ALIGN="CENTER"><a href="#TickerFeedSystem">Ticker Feed System ...5</a></p>
+<P ALIGN="CENTER"><a href="#marketStrategyManagementSystem">Market Strategy Management 
+  System ...9</a></p>
+<P ALIGN="CENTER"><a href="#ApplicationDevelopmentStrategy">Application Development 
+  Strategy...10</a></p>
+<P ALIGN="CENTER"><a href="#TickManagerSubsystem">Tick Manager Subsystem...10</a></p>
+<P ALIGN="CENTER"><a href="#QuoteProcessorAndStrategySubsystems">Quote Processor 
+  and Strategy Subsystems...11</a></p>
+<P ALIGN="CENTER"><a href="#ObjectOverview">Object Overview....12</a></p>
+<P ALIGN="CENTER"><a href="#DataMatrices">Data Matrices...13</a></p>
+<P ALIGN="CENTER"><a href="#ContractOptionMatrix">Contract/Option Matrix...14</a></p>
+<P ALIGN="CENTER"><a href="#QuoteMatrix">Quote Matrix...15</a></p>
+<P ALIGN="CENTER"><a href="#BBOMatrix">BBO Matrix...16</a></p>
+<P ALIGN="CENTER"><a href="#OrderProcessingSystem">Order Processing System...17</a></p>
+<P ALIGN="CENTER"><a href="#SpecialNotesDevelopment">Special Notes Regarding Development 
+  and Platform Considerations...18</a></p>
+<P ALIGN="CENTER"><a href="#Definitions">Definitions (terms used throughout this 
+  document)...19</a></p>
+<P ALIGN="CENTER"><a href="#Author">Special Note From The Author...24</a></p>
+<P ALIGN="CENTER"></p>
+<P ALIGN="CENTER">&nbsp;</p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+<P ALIGN="CENTER">&nbsp;</p>
+</font></u></b>
+<P ALIGN="CENTER">&nbsp;</p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"><a name="TechnicalOverview"></a>Technical Overview</p>
+</font></u></b>
+<P ALIGN="CENTER"></p>
+<P ALIGN="JUSTIFY">The Real-Time Automated Trading System consists of three subsystems that perform data input translation from a proprietary <I>feed</i>, <I>strategic processing</i> of a <I>market quote</i>, and <I>order processing</i> to one or many brokers respectively.  </p>
+<P ALIGN="CENTER">[figure 1].<IMG SRC="Image1.gif" WIDTH=526 HEIGHT=412></p>
+<P ALIGN="CENTER"></p>
+<P ALIGN="JUSTIFY">The <I>Ticker Feed System</i> will translate the data from one of several proprietary feeds into a t<I>ick object</i> that will be received by the <I>Market Strategy Management System.</i> In turn, the Market Strategy Management System (MSM System) will store the tick object  received from the Ticker Feed System (TF System) as one of several data types, determine the strategic validity of various market data -based on a <I>strategy criteria</i> and the tick object just received -and either initiate an <I>order strategy</i> or begin processing another tick object (effectively declining to take action in regards to the tick object it was processing). </p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">If the Market Strategy Management System has determined that an order strategy should indeed be executed, the MSM System will direct the <I>Order Processing System </i>to process the order by sending an <I>order message</i> to a brokerage. For each order that the Order Processing System (OP System) sends to a brokerage on behalf of the MSM System, the MSM System waits for a reply from the OP System as regards the order that was generated from the tick object received, various market information, and various strategic criteria. The MSM System makes use of several matrices for the purpose of evaluating a trading entity and dynamically updates these matrices as new information is available.</p>
+<P ALIGN="CENTER"></p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"><a name="TickerFeedSystem"></a>Ticker Feed System</p>
+</font></u></b>
+<P ALIGN="CENTER"></p>
+<P ALIGN="JUSTIFY">The Ticker Feed System consists of at least one thread (hereafter referred to as a <I>Ticker Object</i>) that receives data from one or more proprietary feeds, saves the data for auditory (internal or external) purposes as a <I>raw tick</i> object, and sends the data to at least one Market Strategy Management System in a form (a tick object / tick message) that the MSM System can process. Each ticker object independently connects to its data feed source as well as its respective MSM System. </p>
+<P ALIGN="CENTER"></p>
+<P ALIGN="CENTER">&nbsp;</p>
+<FONT SIZE=2><P ALIGN="CENTER"><IMG SRC="Image2.gif" WIDTH=589 HEIGHT=565></p>
+</font><P>[figure 2]</p>
+
+<P>It is expected that the ticker object will derive from a common abstract class and will utilize data types that are created for each type of MSM System. That is to say that, programmatically, a ticker object will be individually designed for each combination of feed and MSM System respectively. The advantages of this design are purely in the interest of overall system execution speed relative to processing time. An alternative design, however, may be considered in the future; whereby a single "feed management system" will process all incoming data from several sources and pass-off the respective data to the appropriate ticker objects.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">&nbsp;</p>
+<FONT SIZE=2> 
+<P ALIGN="center"><img src="/projects/dist/RATS/Image3.gif" width="600" height="357"></p>
+</font> 
+<P>[figure 3]</p>
+
+<P ALIGN="JUSTIFY">&nbsp;</p>
+<P ALIGN="JUSTIFY">Furthermore, the modular design of keeping each ticker object independent from other ticker objects provides future expansion whereby ticker objects may be either integrated into or separated across several subsystems of the overall Real-Time Automated Trading System.</p>
+<P ALIGN="JUSTIFY"></p>
+<FONT SIZE=2><P ALIGN="CENTER"></p>
+</font>
+<P align="center"><img src="/projects/dist/RATS/Image4.gif" width="312" height="395">[figure 
+  4].</p>
+
+<P ALIGN="JUSTIFY">&nbsp;</p>
+<P ALIGN="JUSTIFY">The <I>Ticker Base Class</i> is an abstract class that contains the basic layout of all ticker classes. From the Ticker Base Class, Option, Stock, and other classes are derived. While the abstract class does not provide any functionality per-se, it does provide for a common interface that all Ticker Objects will adhere to. The Ticker Base Class also makes use of Feed and MSM System classes (for the individual types of feed and MSM systems -not shown below).</p>
+<P ALIGN="JUSTIFY"></p>
+<P>&nbsp;</p>
+<P>&nbsp;</p>
+<FONT SIZE=2>
+<P align="center"><IMG SRC="Image5.gif" WIDTH=654 HEIGHT=349></p>
+</font>
+<P>[figure 5]</p>
+<B><U><FONT SIZE=5> </font></u></b>
+<P align="center"><b><u><font size="5"><a name="MarketStrategyManagementSystem"></a>Market 
+  Strategy Management System</font></u></b></p>
+<P ALIGN="JUSTIFY">The Market Strategy Management System is the most complex subsystem within the Real-Time Automated Trading System. The MSM System consists of several subsystems within as well and several matrices for storing data. As the MSM System performs operations that will execute strategies as well as performing many operations regarding its data storage, it will most likely require one complete computer system on its own to operate properly and efficiently. While other components of the Real-Time Automated Trading System may be later added to the MSM System, this is expected to be highly unlikely.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">At the highest level of abstraction, the MSM System receives ticks from the Ticker Feed System, stores the data from ticks as quotes or other relevant information, performs a strategy evaluation on each quote for the purpose of discovering a viable trade. If a strategy evaluation deems that a trade should be made, the MSM System then executes an order, sending it as a message to the Order Processor, and waits for a response from the brokerage (through the OP System).</p>
+<P ALIGN="JUSTIFY"></p>
+<FONT SIZE=2><P ALIGN="CENTER"><IMG SRC="Image6.gif" WIDTH=440 HEIGHT=536></p>
+</font><P>[figure 6]</p>
+<B><U>
+<P><a name="ApplicationDevelopmentStrategy"></a>Application Development Strategy:</p>
+</u></b> 
+<P ALIGN="JUSTIFY">The Market Strategy Management System makes use of <I>threads</i> and <I>socket</i> programming as well as <I>POSIX interprocess communications</i> throughout its application code. In particular, the interaction between the various parts (objects and threads) of the system are intended to operate asynchronously for the purpose of maximizing memory and CPU usage.  The use of standardized programming interfaces, such as POSIX and Standard Template Library, will be strongly emphasized throughout the source code. All option, quote, and other objects will be stored in shared memory if possible and will be made available to various processes within the Market Strategy Management System.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">POSIX Message Queues will be used for multiplexing purposes between objects and threads in such a way that each message queue will contain a message, from some object, that is read by a single available thread. Each thread that reads from a queue will act independently of all other threads in performing its actions (evaluating a quote and strategy, sending orders, etc). </p>
+<P ALIGN="JUSTIFY"></p>
+<P>&nbsp;</p>
+<B><U>
+<P><a name="TickManagerSubsystem"></a>Tick Manager Subsystem:</p>
+</u></b> 
+<P ALIGN="JUSTIFY">Data is received from a Ticker Object within the Ticker Feed Manager by the Tick Processor within the MSM System. The Tick processor converts the tick message into its appropriate data type (an option/contract, a quote, stock information, etc), stores this data in an appropriate place, and, if the data is a quote, puts a <I>quote message</i> on the quote processor <I>queue.</i></p>
+
+<P>&nbsp;</p>
+<P>&nbsp;</p>
+<P ALIGN="CENTER">[figure 7] <IMG SRC="Image7.gif" WIDTH=356 HEIGHT=242></p>
+
+<P>&nbsp;</p>
+<B><U>
+<P><a name="QuoteProcessorAndStrategySubsystems"></a>Quote Processor and Strategy 
+  Subsystems:</p>
+</u></b> 
+<P ALIGN="JUSTIFY">Once a Quote Processor thread receives the quote message it performs a handoff of the data to a <I>strategy processing object</i> which uses various data and <I>strategies</i> to evaluate the <I>quote</i> for the purpose of deciding whether to execute an <I>order strategy</i> or not. If an order strategy is deemed appropriate, then the strategy-processing object will create an <I>order strategy message</i> and direct one of many <I>strategy executioner</i> threads to perform the operations specified by the order strategy message. The strategy executioner, in turn, sends orders to the Order Processing System as outlined by the order execution strategy it has received from the strategy processing object. Each strategy executioner thread waits and interactively performs operations relating to the responses it receives, as regards its order execution strategy, from the Order Processing System.</p>
+
+<P>&nbsp;</p>
+<FONT SIZE=2><P></p>
+</font>
+<P align="center"><img src="/projects/dist/RATS/Image8.gif" width="599" height="461"></p>
+<P align="left">[figure 8]</p>
+
+<B><U>
+<P><a name="ObjectOverview"></a>Object Overview:</p>
+</u></b> 
+<P>The overall system design will be modular and make use of objects throughout. Each subsystem will behave independent of the others in a cooperative environment rather than a competitive one. In other words, it is intended that the various objects and threads within the MSM System behave in such a way as to make the best use of CPU and other hardware resources. In order to make a system that is as cooperative as possible some hierarchy of thread priority may be required.</p>
+
+<FONT SIZE=2><P ALIGN="CENTER"><IMG SRC="Image9.gif" WIDTH=456 HEIGHT=583></p>
+</font><P>[figure 9]</p>
+
+<B><U>
+<P><a name="DataMatrices"></a>Data Matrices:</p>
+</u></b> 
+<P ALIGN="JUSTIFY">As the figure 9 of the section entitled ‘Object Overview’ shows, there are several matrices that the MSM System uses for purposes of decision making in regards to trading options.  This section outlines the general layout of each of these matrices as well as their interaction within the overall process. </p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">There are three primary <I>Options Matrices </i>that are used and updated by the MSM System: </p>
+<P ALIGN="JUSTIFY"></p>
+
+<UL>
+<P ALIGN="JUSTIFY"><LI>Contract / Option Matrix</li><p></p>
+<P ALIGN="JUSTIFY"><LI>Quote Matrix</li><p></p>
+<P ALIGN="JUSTIFY"><LI>BBO Matrix</li><p></p></ul>
+
+
+<P ALIGN="JUSTIFY">Of the three matrices the Contract/Option matrix, Quote Matrix, and BBO Matrix are each indexed by <I>root symbol</i> and <I>contract name</i> and contain pointers to their respective objects (Contract, Quote, and BBO objects). Each matrix may be described as a two dimensional array whereby the first dimension is indexed by root symbol and the second dimension is indexed by contract name. Actual implementation of these matrices as object pointer containers, however, is quite different from merely an arraignment such as a two dimensional array.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">As it is important to keep the usage of resources to a minimum, objects pointed to by any matrix will be dynamically allocated. As an array is populated with pointers to actual objects memory will be allocated in heap space (on the heap).  Primarily objects which are pointed to by elements of the single dimension array will contain other arrays that relevant to the object being pointed to.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">In addition to the matrices previously mentioned there are, or may be, several other matrices that will be utilized by the strategy processing objects within the MSM System. For one, it is expected that extraneous data that will influence a particular trading strategy will also have to be maintained. These other matrices are still being evaluated an, for now, are not part of this discussion.</p>
+
+<B><I>
+<P><a name="ContractOptionMatrix"></a>Contract/Option Matrix:</p>
+</i></b>
+<P ALIGN="JUSTIFY">The Contract Matrix will consist of a single dimension array of type RootSymbol pointers that are each indexed by their <I>root symbol integer (</i>the root symbol converted into an integer). The size of this array will be 27x27x27 elements (one element for each possible three-character root symbol, plus one extra element for testing purposes and system maintenance). Each RootSymbol object will contain several pieces of data related to a <I>contract entity</i> as well as one <I>OptionContainer</i> object. Each OptionContainer object will contain an array of approximately 27x27 <I>contract objects</i> that are indexed by contract name (one element for each possible two-character contract name). The purpose of this matrix is that it is meant to hold data that corresponds to individual option contracts. Only valid <I>trading entities</i> will contain pointers to objects in the Contract/Option Matrix. That is to say that if a symbol is not to be used for trading, then it’s corresponding element within the matrix does not contain a valid pointer to a RootSymbol object. The Contract Matrix is updated dynamically by a Matrix Management Subsystem of the MSM System but will also be populated at the time of system startup.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="CENTER">&nbsp;</p>
+<FONT SIZE=2><P ALIGN="CENTER"><IMG SRC="Image10.gif" WIDTH=618 HEIGHT=394></p>
+</font><P>[figure 10]</p>
+
+<B><I>
+<P><a name="QuoteMatrix"></a>Quote Matrix:</p>
+</i></b> 
+<P ALIGN="JUSTIFY">The Quote Matrix is much like the Contract Matrix in the way that it is indexed. However, instead of the array being of type RootSymbol pointers it is of type QuoteSymbol pointers. Each QuoteSymbol object, like that of a RootSymbol object, contains an array of <I>QuoteContainer</i> pointers that are indexed by contract name.Each QuoteContainer has a single <I>CompoundQuote</i> object that is an array of <I>Quote objects </i>indexed by <I>Exchange</i>. In addition, each new quote that is created will automatically calculate the BBO for it’s respective contract and update the BBO matrix dynamically. The Quote Matrix is updated by the Tick Manager of the Market Strategy Management System.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="center"><IMG SRC="Image11.gif" WIDTH=623 HEIGHT=612></p>
+<P ALIGN="JUSTIFY">[figure 11]</p>
+<P ALIGN="left"></p>
+<P ALIGN="left"><b><i><a name="BBOMatrix"></a>BBO Matrix:</i></b></p>
+<P ALIGN="JUSTIFY">The BBO Matrix is again indexed by root symbol and contract name but contains pointers to objects of type <I>BBOSymbol</i> pointers. Each BBOSymbol will contain an array of <I>BBO objects</i> that are indexed by contract name. Each BBO object will contain information that is relevant to it’s respective contract and. The BBO Matrix is dynamically updated and maintained by Quote objects of the Quote Matrix.</p>
+<B><I>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">&nbsp;</p>
+<FONT SIZE=2>
+<P ALIGN="center"><IMG SRC="Image12.gif" WIDTH=623 HEIGHT=312></p>
+</font></i></b>
+<P>[figure 12]</p>
+<B><I> </i><U><FONT SIZE=5> </font></u></b>
+<P ALIGN="center"><b><u><font size="5"><a name="OrderProcessingSystem"></a>Order 
+  Processing System</font></u></b></p>
+<P ALIGN="JUSTIFY">The Order Processing System receives order messages from the Market Strategy Management System and places orders with various brokerages on behalf of the overall Real-Time Automated Trading System. No more information is available at this time in regards to the operations and Application structure of this system. </p>
+<B><U>
+<FONT SIZE=5><P ALIGN="CENTER">&nbsp;</p>
+</font></u></b><P ALIGN="JUSTIFY">&nbsp;</p>
+<B><U><FONT SIZE=5>
+<P ALIGN="JUSTIFY"><a name="SpecialNotesDevelopment"></a>Special Notes Regarding 
+  Development and Platform Considerations</p>
+</font></u></b> 
+<P ALIGN="JUSTIFY">The choice to use GNU/Linux for development for the Real-Time Automated Trading System is based on several criteria which influence any software development project. For one, Linux is a cheap, relatively standardized interface from which to develop software that is easily portable to other UNIX type operating systems (such as AIX, SOLARIS for Intel or SPARC, HPUX, SCO, B/OS, and QNX). In order to maintain the widest variety of platform independence it has been determined that the Real-Time Automated Trading System will be developed for the GNU/Linux operating system. While Microsoft Windows may be a viable option for the development of this system, there are few financial data providers who provide consistent feeds to the Windows operating system and it's interfaces. Furthermore, in the event that the Real-Time Automated Trading System should be packaged for sale in the future, the most likely interface for such an application system is most often expected to be made available on UNIX type operating systems.  It is certainly understood that the Real-Time Automated Trading System may migrate from GNU/Linux to another UNIX platform in the future.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">In addition to the aforementioned reasons for developing the Real-Time Automated Trading System on GNU/Linux there are technical considerations that are outlined (briefly) as follows: </p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-GNU/Linux offers compatibly across at least 6 different types of CPUs.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-GNU/Linux offers (for the most part) compatibility with most UNIX type operating systems</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-The GNU/Linux kernel (the core of the operating system) has been optimized by peer review (of several hundred people) over the coarse of at least 10+ years.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-GNU/Linux offers a development environment whereby developers are empowered to make changes to the core operating system that may improve the overall performance of their applications.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-GNU/Linux uses the GNU, gcc/egcs compiler -the fastest compiler in the world (which is an aid during the engineering portion of any application software development cycle).</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-Standard development practices for GNU/Linux have been established by peer review over the coarse of the last 10+ years. It is not uncommon for a GNU/Linux developer to be adept at utilizing the various tools provided by the GNU development community (i.e. applications such as emacs, automake and autoconf, vi -or respective clones, and CVS).</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-The cost of developing for GNU/Linux is minimal in contrast to other proprietary UNIX or MS Windows systems and provides a base from which to target specific platforms in the future.</p>
+<P ALIGN="JUSTIFY"></p>
+<P ALIGN="JUSTIFY">-GNU/Linux is a "Hackers Platform" whereby persons all over the world have contributed to its standardization and functionality (i.e. POSIX, STL, C++, PERL, PHP, HTML, WML, SOCKET, IPC -except condition variables, Semaphore, Mutex, and Shared Memory standards compliance).</p>
+<B><U><FONT SIZE=5>
+<P ALIGN="CENTER"></p>
+<P ALIGN="CENTER"><a name="Definitions"></a>Definitions</p>
+</font></u></b> <B>
+<P>Automatic Brokerage Entity:</p></b><DIR><DIR>
+<B>
+
+</b><P>An automatic trading system run by a broker. The job of this system is to process orders from the broker’s clients.</p>
+</dir>
+</dir>
+
+<B><P>Communication media:</p></b><DIR><DIR>
+<B>
+
+</b><P>Any media which is used as a bridge between two systems (i.e. Ethernet cable, IPC, any other software or hardware connection)</p>
+</dir>
+</dir>
+
+<B><P>compound_quote:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>{<I>ref.</i> Quote compound_quote [NUM_EXCHANGES]}</p>
+  </blockquote>
+</blockquote>
+<DIR> 
+  <DIR> 
+    <P>An Array which contains Option objects; one for each exchange where the 
+      option might trade. </p>
+  </dir>
+</dir>
+
+<B><P>Contract:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>&#9;<I>see Option object</i></p>
+  </blockquote>
+</blockquote>
+<B><P>Contract Name:</p></b><DIR><DIR>
+<B>
+
+</b><P>The Name of a contract as represented by the last two characters of a symbol used to identify a particular contract. These two characters are used throughout the Real-Time Automated Trading System in the form of an integer for the purpose of fast data referencing within arrays.</p>
+</dir>
+</dir>
+
+<B><P>Feed:</p></b><DIR><DIR>
+<B>
+
+</b><P>Communication media that transfers data from some source to a Ticker object within the Ticker Feed System. Types of data that may be sent across this communication media may be one of the following type s: Option, Stock, timestamps, and unemployment information).</p>
+</dir>
+</dir>
+
+<B><P>Financial Market Data Provider:</p></b><DIR><DIR>
+<B>
+
+</b><P>A data vendor who provides a stream of real-time financial market data (such as stock or option quotes).</p>
+</dir>
+</dir>
+
+<B><P>interprocess communications:</p></b><DIR><DIR>
+<B>
+
+</b><P>A term used by software engineers that refers to a communication mechanism (or media) that is internal to a particular computer system and is managed by the Operating System.</p>
+</dir>
+</dir>
+
+<B><P>Maintenance Ticker:</p></b><DIR><DIR>
+<B>
+
+</b><P>A special Ticker object that processes and sends maintenance data to the Matrix Manager System. This data is then used to update various matrices within the overall Trading System.</p></dir>
+</dir>
+
+<P>&#9;</p>
+<B>
+<P>&nbsp;</p>
+<P>&nbsp;</p>
+<P>Market Strategy Management System:</p></b><DIR><DIR>
+<B>
+
+</b><P>A subsystem of the Real-Time Automated Trading System that performs strategic analysis of quotes in contrast to their respective contract information as well as other data. The MSM System is responsible for processing ticks and generating order strategies.</p>
+</dir>
+</dir>
+
+<B><P>market quote:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b> A Quote that is generated by a market.</p>
+  </blockquote>
+</blockquote>
+<B><P>Matrix Manager:</p></b><DIR><DIR>
+<B>
+
+</b><P>A process which monitors the Maintenance Ticker for data which is used to update one of several matrices within the Trading System. </p>
+</dir>
+</dir>
+
+<B><P>Object Oriented:</p></b><DIR><DIR>
+<B>
+
+</b><P>A term used by software engineers in reference to a particular set of software design  heuristics. </p>
+</dir>
+</dir>
+
+<B><P>Option object:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>&#9;An Object which contains option information. This object will be indexed 
+      by exchange.</p>
+  </blockquote>
+</blockquote>
+<B><P>Option Matrix:</p></b><DIR><DIR>
+<B>
+
+</b><P>A matrix of option information where each contract is indexed by its Root Symbol object along with its respective Contract Name and trading exchange.</p>
+</dir>
+</dir>
+
+<B><P>option/contract: </p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><I>&#9;See option object.</i></p>
+  </blockquote>
+</blockquote>
+<B><P>Order Manager object:</p></b><DIR><DIR>
+<B>
+
+</b><P>An object that receives Order Messages from the Strategy Management System at the Order Processing System level of the overall Trading System. This object's purpose is to communicate with individual brokers on behalf of the Trading system.</p>
+</dir>
+</dir>
+
+<B><P>Order Message:</p></b><DIR><DIR>
+<B>
+
+</b><P>A message sent from the Send Order Manager of the Strategy Management System to the Order Processor System.</p>
+</dir>
+</dir>
+
+<B><P>order processing:</p></b><DIR><DIR>
+<B>
+
+</b><P>A reference to the act of the Real-Time Automated Trading System, the Order Processing sub-System in particular, processing an order –sending an order to an Automatic Brokerage Entity.</p>
+</dir>
+</dir>
+
+<B><P>Order Processor System: </p></b><DIR><DIR>
+<B>
+
+</b><P>The system of objects and processes which manages the communication between the Strategy Management System and Automatic Brokerage Entities.</p>
+
+<B><P>&nbsp;</p></b></dir>
+</dir><B>
+
+<P>Order Reply Message:</p></b><DIR><DIR>
+<B>
+
+</b><P>A reply message sent from the Order Processor System to the Send Order Manager of the Strategy Management System.</p>
+
+<B><P>&nbsp;</p></b></dir>
+</dir><B>
+
+<P>order strategy:</p></b><DIR><DIR>
+<B>
+
+</b><P>The concept of performing one or more order processes in an effort to make the best possible trade.</p>
+</dir>
+</dir>
+
+<B><P>POSIX:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>A term used by software engineers that refers to a set of standards 
+      put forth by the EEE.</p>
+  </blockquote>
+</blockquote>
+<B><P>Queue:</p></b><DIR><DIR>
+<B>
+
+</b><P>A type of interprocess communications mechanism that provides fast multiplexing capabilities of various types of data.</p>
+</dir>
+</dir>
+
+<B><P>Quote:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>&#9;An abstract data-set consisting of elements that are used to create 
+      a Quote Object</p>
+  </blockquote>
+</blockquote>
+<B><P>Quote object:</p></b><DIR><DIR>
+<B>
+
+</b><P>An object which contains one valid quote for a particular options contract from a particular exchange.</p>
+</dir>
+</dir>
+
+<B><P>Quote Container:</p></b><DIR><DIR>
+<B>
+
+</b><P>An object which contains an array of quotes (a Compound Quote object) indexed by a constants which represent exchanges that the option for the quotes are traded on.</p></dir>
+</dir>
+
+<P>&#9;</p>
+<B><P>Quote Matrix:</p></b><DIR><DIR>
+<B>
+
+</b><P>A Matrix which contains Quote Containers and their respective data sets (i.e. each Quote Container contains one Compound Quote Object.</p>
+</dir>
+</dir>
+
+<B><P>Quote Message:</p></b><DIR><DIR>
+<B>
+
+</b><P>A message sent from the Tick Manager of the Strategy Management System to one of many threads (Quote Processors) that will determine if a quote should be utilized for a trade.</p>
+</dir>
+</dir>
+
+<B><P>Quote Processor:</p></b><DIR><DIR>
+<B>
+
+</b><P>A thread object that receives a Quote Message from the Tick Manager. Each of these threads will perform </p>
+</dir>
+</dir>
+
+<B><P>raw tick:</p></b><DIR><DIR>
+<B>
+
+</b><P>A data object that is a Real-Time Automated Trading System representation of data sent from a feed.</p>
+</dir>
+</dir>
+
+<B><P>root symbol:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>The portion of an option symbol that represents the basic underlying 
+      symbol.</p>
+  </blockquote>
+</blockquote>
+<B><P>Runtime Platform:</p></b><DIR><DIR>
+<B>
+
+</b><P>The runtime environment for an application which includes, but is not limited to, CPU type, operating system, and programming language.</p>
+</dir>
+</dir>
+
+<B><P>Socket:</p></b><DIR><DIR>
+<B>
+
+</b><P>A software mechanism that provides a common interface for programming client/server applications. In particular, sockets provide an interface for the communication between applications on either the same or different physical computer systems.</p>
+</dir>
+</dir>
+
+<B><P>Stock:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>An abstract trading entity.</p>
+  </blockquote>
+</blockquote>
+<B><P>software and hardware components:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>Various parts of a computer system.</p>
+  </blockquote>
+</blockquote>
+<B><P>stock matrix:</p></b><DIR><DIR>
+<B>
+
+</b><P>A matrix within the Real-Time Automated Trading System (the Market Strategy Management System) that contains stock quote information.</p>
+</dir>
+</dir>
+
+<B><P>Strategies:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>Any number planned actions as regards the potential trading of options.</p>
+  </blockquote>
+</blockquote>
+<B><P>strategic processing:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>&#9;The act of processing one or more strategies.</p>
+  </blockquote>
+</blockquote>
+<B><P>strategic processing object:</p></b><DIR><DIR>
+<B>
+
+</b><P>An object, within the MSM System, that evaluates a quote against market and contract information and makes a decision as to whether to execute a strategy.</p>
+</dir>
+</dir>
+
+<B><P>strategy criteria:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>The criteria used by a strategic processing object.</p>
+  </blockquote>
+</blockquote>
+<B><P>Strategy executioner:</p></b><DIR><DIR>
+<B>
+
+</b><P>A thread within the MSM System that performs the necessary operations (sending orders to the Order Processing System and awaiting responses, etc.) to carry out an order strategy.</p>
+</dir>
+</dir>
+
+<B><P>Strategy Management System:</p></b><DIR><DIR>
+<B>
+
+</b><P>A reference to the operations of the MSM System that perform the various operations in evaluating and carrying out various strategies.</p>
+</dir>
+</dir>
+
+<B><P>Strategy Matrix:</p></b><DIR><DIR>
+<B>
+
+</b><P>A Matrix that contains various data that is used by a strategy processing object to evaluate  a quote.</p>
+</dir>
+</dir>
+
+<B><P>Strategy Modeling Language:</p>
+</b><P>&#9;</p>
+<B><P>Thread:</p></b><DIR><DIR>
+<P>
+
+<B>&#9;</b>A term used by software engineers that refers to a subprocess within a process (also known as a lightweight process).</p>
+</dir>
+</dir>
+
+<B><P>Tick:</p></b><DIR><DIR>
+<B>
+
+</b><P>An abstract term that refers to a piece of data that is sent from an exchange in reference to some trading entity.</p>
+</dir>
+</dir>
+
+<B><P>Tick Handler:</p></b><DIR><DIR>
+<B>
+
+</b><P>A thread within the MSM System that receives messages that contain tick objects from the Ticker Feed System and distributes the tick object data.</p></dir>
+</dir>
+
+<B><P>Tick Object:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p><B>&#9;</b>An object that contains some subset of data received from a 
+      feed.</p>
+  </blockquote>
+</blockquote>
+<B><P>Ticker Feed Object:</p></b><DIR><DIR>
+<B>
+
+</b><P>An object/process/thread within the Ticker Feed System that processes data from a feed and transmits the data in a form that is appropriate for it’s receiving MSM System.</p>
+</dir>
+</dir>
+
+<B><P>Ticker Feed System:</p></b><DIR><DIR>
+<B>
+
+</b><P>A subsystem of the Real-Time Automated Trading System that manages Ticker Feed Objects.</p>
+</dir>
+</dir>
+
+<B><P>Trader:</p>
+</b> 
+<blockquote> 
+  <blockquote>
+    <p>&#9;An individual who’s job it is to trade options.</p>
+  </blockquote>
+</blockquote>
+<B><P>Trading System:</p>
+<P>&#9;</p>
+
+<P>Underlying Symbol:</p>
+</b>
+<P>&nbsp;</p>
+<P>&nbsp;</p>
+<B><FONT SIZE=5>
+<P><a name="Author"></a>Special Note From The Author:</p>
+</font></b> 
+<P ALIGN="JUSTIFY">This specification was developed and written using the following software on the Suse 8.0 distribution GNU/Linux Operating System:</p>
+
+<P>dia -a GNU diagram editor</p>
+
+<P>gimp -graphical image editor</p>
+
+<P>emacs -a general purpose GNU editor</p>
+
+<P>abiword -a MS Word style document editor (which can save files for MS Word `97)</p>
+
+<P>M.S. Word `97 -a general document editor for Microsoft Windows `95+</p>
+
+<P>&nbsp;</p></body>
+</html>
+
